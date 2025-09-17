@@ -1,44 +1,61 @@
-# SC3020 Database Project 1 – Task 1: Block-Based Storage Manager
+# NBA Games Database Management System
 
-## Overview
+This project implements a database management system with storage and indexing components specifically designed for NBA game data.
 
-This project implements a simple block-based storage manager in C++.  
-It simulates disk storage using a binary file (`disk.img`), storing data from `games.txt` in fixed-size blocks (4096 bytes each).
+## Project Structure
+
+- `GameRecord.h` - Header file containing all class and structure definitions
+- `GameRecord.cpp` - Implementation file with all functionality
+- `main.cpp` - Main program demonstrating the system
+- `games.txt` - Input data file (tab-separated values)
+- `nba_games.db` - Binary database file (generated after running)
 
 ## Features
 
-- Reads records from `../data/games.txt`
-- Stores data into a virtual disk file (`disk.img`) in 4096-byte blocks
-- Provides functions to create, destroy, read, and write blocks
-- Reports statistics: record size, number of records, records per block, and number of blocks used
+### Storage Component
 
-## How to Run
+- **Disk-based storage**: Data is stored in a binary file format
+- **Block organization**: Data is organized into 4KB blocks
+- **Record structure**: Fixed-size records for NBA game data
+- **File simulation**: Uses binary files to simulate disk storage
 
-1. Place `games.txt` in the data directory (one level above src).
-2. Build the project:
-   ```
-   g++ -o main main.cpp storage.cpp
-   ```
-3. Run the program from the src directory:
-   ```
-   ./main
-   ```
-4. The program will:
-   - Copy the contents of `games.txt` into `disk.img`
-   - Print storage statistics
+### Data Structure
 
-## File Structure
+Each record contains:
 
-- storage.h – Storage manager API
-- storage.cpp – Storage manager implementation
-- main.cpp – Main program for Task 1
-- games.txt – Input data file
-- disk.img – Virtual disk file (created by the program)
+- `GAME_DATE_EST` - Game date (YYYY-MM-DD format)
+- `TEAM_ID_home` - Home team ID (integer)
+- `PTS_home` - Home team points (integer)
+- `FG_PCT_home` - Field goal percentage (float)
+- `FT_PCT_home` - Free throw percentage (float)
+- `FG3_PCT_home` - 3-point field goal percentage (float)
+- `AST_home` - Home team assists (integer)
+- `REB_home` - Home team rebounds (integer)
+- `HOME_TEAM_WINS` - 1 if home team wins, 0 otherwise (integer)
 
-## Notes
+## Compilation and Usage (Windows)
 
-- All storage operations are performed on `disk.img` to avoid modifying the real file system.
-- Block size is set to 4096 bytes for efficient storage and retrieval.
+### Prerequisites
 
----
+- C++ compiler with C++11 support (MinGW-w64 recommended)
+- Windows PowerShell or Command Prompt
 
+### Installing C++ Compiler (if needed)
+
+1. Download MinGW-w64 from: https://www.mingw-w64.org/downloads/
+2. Install and add to your system PATH
+3. Verify installation: `g++ --version`
+
+### Building the Project
+
+```powershell
+# Compile all files together
+g++ -std=c++11 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp -o nba_db.exe
+```
+
+### Running the Program
+
+```powershell
+# Run the compiled executable
+.\nba_db.exe
+```
