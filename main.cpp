@@ -37,15 +37,6 @@ int main()
         db2.displayStatistics();
     }
 
-    // Display first 10 records as sample
-    std::cout << "\n4. Sample records (first 10):" << std::endl;
-    int count = 0;
-    for (size_t block_idx = 0; block_idx < db.getTotalBlocks() && count < 10; block_idx++)
-    {
-        // This would require additional methods to access blocks,
-        // but demonstrates the concept
-    }
-
     std::cout << "\nDatabase operations completed successfully!" << std::endl;
     return 0;
 }
