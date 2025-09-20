@@ -6,7 +6,7 @@ This project implements a database management system with storage and indexing c
 
 - `GameRecord.h` - Header file containing all class and structure definitions
 - `GameRecord.cpp` - Implementation file with all functionality
-- `IndexManager.cpp` - B+ Tree indexinh implementation
+- `IndexManager.cpp` - B+ Tree indexing implementation
 - `main.cpp` - Main program demonstrating the system
 - `games.txt` - Input data file (tab-separated values)
 - `nba_games.db` - Binary database file (generated after running)
