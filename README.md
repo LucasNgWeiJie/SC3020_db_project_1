@@ -57,10 +57,10 @@ Each record contains:
 
 ```powershell
 # Compile all files together (Windows)
-g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nbadb.exe
+g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nb_adb.exe
 
 # Compile all files together (MacOs)
-g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nbadb
+g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nb_adb
 ```
 
 ### Running the Program
