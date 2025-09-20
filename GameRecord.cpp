@@ -99,6 +99,7 @@ int Block::getMaxRecordsPerBlock()
 DatabaseFile::DatabaseFile(const std::string &db_filename)
     : filename(db_filename), total_records(0), total_blocks(0)
 {
+    index_manager = new IndexManager();
 }
 
 DatabaseFile::~DatabaseFile()
@@ -107,7 +108,80 @@ DatabaseFile::~DatabaseFile()
     {
         file.close();
     }
+    delete index_manager;
 }
+
+// Build indexes for the database
+bool DatabaseFile::buildIndexes()
+{
+    if (index_manager) {
+        return index_manager->buildIndexes(*this);
+    }
+    return false;
+}
+
+// Search methods using team id
+std::vector<GameRecord> DatabaseFile::searchByTeamId(int team_id)
+{
+    std::vector<GameRecord> results;
+    if (!index_manager) return results;
+    
+    auto locations = index_manager->searchByTeamId(team_id);
+    
+    for (const auto& loc : locations) {
+        if (static_cast<size_t>(loc.first) < blocks.size()) {  // Cast int to size_t
+            GameRecord record = blocks[loc.first].getRecord(loc.second);
+            results.push_back(record);
+        }
+    }
+    
+    return results;
+}
+
+// search methods using points range
+std::vector<GameRecord> DatabaseFile::searchByPointsRange(int min_pts, int max_pts)
+{
+    std::vector<GameRecord> results;
+    if (!index_manager) return results;
+    
+    auto locations = index_manager->searchByPointsRange(min_pts, max_pts);
+    
+    for (const auto& loc : locations) {
+        if (static_cast<size_t>(loc.first) < blocks.size()) {  // Cast int to size_t
+            GameRecord record = blocks[loc.first].getRecord(loc.second);
+            results.push_back(record);
+        }
+    }
+    
+    return results;
+}
+
+// search methods using FG percentage range
+std::vector<GameRecord> DatabaseFile::searchByFGPercentage(float min_pct, float max_pct)
+{
+    std::vector<GameRecord> results;
+    if (!index_manager) return results;
+    
+    auto locations = index_manager->searchByFGPercentage(min_pct, max_pct);
+    
+    for (const auto& loc : locations) {
+        if (static_cast<size_t>(loc.first) < blocks.size()) {  // Cast int to size_t
+            GameRecord record = blocks[loc.first].getRecord(loc.second);
+            results.push_back(record);
+        }
+    }
+    
+    return results;
+}
+
+// Display index statistics
+void DatabaseFile::displayIndexStatistics() const
+{
+    if (index_manager) {
+        index_manager->displayIndexStatistics();
+    }
+}
+
 
 bool DatabaseFile::loadFromTextFile(const std::string &text_filename)
 {
@@ -296,6 +370,7 @@ bool DatabaseFile::parseGameLine(const std::string &line, GameRecord &record)
         return false;
     }
 }
+
 
 // Utility Functions Implementation
 namespace Utils

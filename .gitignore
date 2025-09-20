@@ -1,0 +1,71 @@
+# Compiled executables
+nbadb
+nbadb.exe
+*.exe
+*.out
+a.out
+
+# Generated database files
+*.db
+nba_games.db
+
+# Compiler generated files
+*.o
+*.obj
+*.class
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Debug files
+*.dSYM/
+*.pdb
+*.ilk
+*.map
+
+# Build directories
+build/
+bin/
+obj/
+debug/
+release/
+
+# CMake files (if using CMake)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Core dumps
+core
+*.core
+
+# Memory debugging
+valgrind-*.log
+*.gcda
+*.gcno

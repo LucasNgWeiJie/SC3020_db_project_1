@@ -6,9 +6,16 @@ This project implements a database management system with storage and indexing c
 
 - `GameRecord.h` - Header file containing all class and structure definitions
 - `GameRecord.cpp` - Implementation file with all functionality
+- `IndexManager.cpp` - B+ Tree indexinh implementation
 - `main.cpp` - Main program demonstrating the system
 - `games.txt` - Input data file (tab-separated values)
 - `nba_games.db` - Binary database file (generated after running)
+- `.gitignore` - Git ignore file (excludes compiled binaries and generated files)
+- `README.md` - This documentation file
+
+## Generated files (not tracked):
+- `nba_games.db` - Binary database file (generated after running)
+- `nbadb` / `nbadb.exe` - Compiled executable
 
 ## Features
 
@@ -33,14 +40,14 @@ Each record contains:
 - `REB_home` - Home team rebounds (integer)
 - `HOME_TEAM_WINS` - 1 if home team wins, 0 otherwise (integer)
 
-## Compilation and Usage (Windows)
+## Compilation and Usage
 
-### Prerequisites
+### Prerequisites (Windows)
 
 - C++ compiler with C++11 support (MinGW-w64 recommended)
 - Windows PowerShell or Command Prompt
 
-### Installing C++ Compiler (if needed)
+### Installing C++ Compiler (if needed for windows)
 
 1. Download MinGW-w64 from: https://www.mingw-w64.org/downloads/
 2. Install and add to your system PATH
@@ -49,13 +56,21 @@ Each record contains:
 ### Building the Project
 
 ```powershell
-# Compile all files together
-g++ -std=c++11 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp -o nba_db.exe
+# Compile all files together (Windows)
+g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nbadb.exe
+
+# Compile all files together (MacOs)
+g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nbadb
 ```
 
 ### Running the Program
 
 ```powershell
-# Run the compiled executable
+# Run the compiled executable (Windows)
 .\nba_db.exe
+
+# Run the compiled executable (MacOs)
+./nba_db.exe
 ```
+
+

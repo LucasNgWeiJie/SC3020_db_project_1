@@ -28,6 +28,43 @@ int main()
         return 1;
     }
 
+    //Build indexes
+    std::cout << "\n3. Building indexes..." << std::endl;
+    if (!db.buildIndexes())
+    {
+        std::cerr << "Failed to build indexes" << std::endl;
+        return 1;
+    }
+    // Display index statistics
+    db.displayIndexStatistics();
+
+    // Demonstrate index searches
+    std::cout << "\n4. Index-based searches:" << std::endl;
+    
+    // Search by team ID
+    std::cout << "\nSearching for team ID 1610612744:" << std::endl;
+    auto team_results = db.searchByTeamId(1610612744);
+    std::cout << "Found " << team_results.size() << " records" << std::endl;
+    for (size_t i = 0; i < std::min(size_t(5), team_results.size()); i++) {
+        team_results[i].display();
+    }
+
+    // Search by points range
+    std::cout << "\nSearching for games with 110-120 points:" << std::endl;
+    auto points_results = db.searchByPointsRange(110, 120);
+    std::cout << "Found " << points_results.size() << " records" << std::endl;
+    for (size_t i = 0; i < std::min(size_t(5), points_results.size()); i++) {
+        points_results[i].display();
+    }
+
+    // Search by FG percentage range
+    std::cout << "\nSearching for games with FG% between 0.5 and 0.6:" << std::endl;
+    auto fg_results = db.searchByFGPercentage(0.5f, 0.6f);
+    std::cout << "Found " << fg_results.size() << " records" << std::endl;
+
+    std::cout << "\nDatabase operations completed successfully!" << std::endl;
+    return 0;
+
     // Demonstrate reading from disk
     std::cout << "\n3. Testing disk read functionality..." << std::endl;
     DatabaseFile db2("nba_games.db");
