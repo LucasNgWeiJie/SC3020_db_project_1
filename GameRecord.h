@@ -58,6 +58,7 @@ struct Block
     // Get maximum records per block
     static int getMaxRecordsPerBlock();
 };
+
 // B+ Tree Node for indexing
 template<typename KeyType>
 struct BPlusTreeNode
@@ -69,7 +70,7 @@ struct BPlusTreeNode
     int key_count;
     KeyType keys[MAX_KEYS];
     
-    // For leaf nodes: pointers to data records
+    // For leaf nodes: pointers to data records. Last pointer to next leaf node.
     // For internal nodes: pointers to child nodes
     // a union allows the same memory space to serve different purposes depending on the node type
     union {
@@ -152,6 +153,7 @@ private:
     template<typename KeyType>
     int getTotalKeys(BPlusTreeNode<KeyType>* root) const;
 };
+
 // Database file manager class
 class DatabaseFile
 {
