@@ -61,6 +61,17 @@ int main()
     std::cout << "\nSearching for games with FG% between 0.5 and 0.6:" << std::endl;
     auto fg_results = db.searchByFGPercentage(0.5f, 0.6f);
     std::cout << "Found " << fg_results.size() << " records" << std::endl;
+    for (size_t i = 0; i < std::min(size_t(5), fg_results.size()); i++) {
+        fg_results[i].display();
+    }
+
+    // Search by FT percentage range
+    std::cout << "\nSearching for games with FT% between 0.9 and 1.0:" << std::endl;
+    auto ft_results = db.searchByFTPercentage(0.9f, 1.0f);
+    std::cout << "Found " << ft_results.size() << " records" << std::endl;
+    for (size_t i = 0; i < std::min(size_t(5), ft_results.size()); i++) {
+        ft_results[i].display();
+    }
 
     std::cout << "\nDatabase operations completed successfully!" << std::endl;
     return 0;
