@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <queue>
 #include <cstring>
+#include <type_traits>  
+#include <iomanip> 
 
 // B+ Tree Node Implementation
 template<typename KeyType>
@@ -82,76 +84,128 @@ bool IndexManager::buildIndexes(const DatabaseFile& db)
     return true;
 }
 
+
+
+
+
 // Main insert function with automatic node splitting
+
+// Idea for inserting in internal node: 
+// Trace down to the leaf where the key belongs, while remembering every parent passed and which child slot was taken at each parent.
+// If the leaf has space, insert.
+// If the leaf is full, split it into Left/Right leaves and promote the first key of the Right leaf upward.
+// Try to insert that promoted key into the parent that was remembered. If the parent overflows, split the parent and promote again to its parent.
+// Repeat this “trace up” until a parent absorbs it. Only if you trace past the real root do you make a new root (once).
+
 template<typename KeyType>
 bool IndexManager::insert(BPlusTreeNode<KeyType>*& root, KeyType key, int block_id, int record_id)
 {
-    using NodeType = BPlusTreeNode<KeyType>;
-    static const int MAX_KEYS = NodeType::MAX_KEYS;
+    using Node = BPlusTreeNode<KeyType>;
+    const int MAX_KEYS = Node::MAX_KEYS;
 
     if (!root) {
-        root = new BPlusTreeNode<KeyType>(true);
+        root = new Node(true);
     }
-    
-    if (root->is_leaf) {
-        // Try to insert directly into leaf
-        if (root->key_count < MAX_KEYS) {
-            return insertIntoLeaf(root, key, block_id, record_id);
-        } else {
-            // Leaf is full, need to split
 
-            // For debugging:
-            // std::cout << "Splitting leaf node (key count: " << root->key_count << ")" << std::endl;
-            
-            // Split first, then insert
-            auto split_result = splitLeaf(root);
-            KeyType promoted_key = split_result.first;
-            BPlusTreeNode<KeyType>* new_leaf = split_result.second;
-            
-            if (!new_leaf) {
-                return false;  // Split failed
-            }
-            
-            // Decide which leaf to insert into
-            if (key < promoted_key) {
-                insertIntoLeaf(root, key, block_id, record_id);
-            } else {
-                insertIntoLeaf(new_leaf, key, block_id, record_id);
-            }
-            
-            // Create new root
-            BPlusTreeNode<KeyType>* new_root = new BPlusTreeNode<KeyType>(false);
-            new_root->keys[0] = promoted_key;
-            new_root->children[0] = root;
-            new_root->children[1] = new_leaf;
-            new_root->key_count = 1;
-            
-            root = new_root;
+    // If root is leaf and has space then insert directly
+    if (root->is_leaf && root->key_count < MAX_KEYS) {
+        return insertIntoLeaf(root, key, block_id, record_id);
+    }
 
-            // For debugging:
-            // std::cout << "Created new root after leaf split" << std::endl;
-            
+    // Split an internal node once it overflows.
+    auto splitInternalHere = [&](Node* left, KeyType& promoted_key_out) -> Node* {
+        // left is full. Create right internal node and split around the middle.
+        Node* right = new Node(false);
+        int mid = left->key_count / 2;        
+        promoted_key_out = left->keys[mid];
+
+        
+        int rkeys = left->key_count - (mid + 1);
+        right->key_count = rkeys;
+        for (int i = 0; i < rkeys; ++i) {
+            right->keys[i] = left->keys[mid + 1 + i];
+        }
+        for (int i = 0; i <= rkeys; ++i) {
+            right->children[i] = left->children[mid + 1 + i];
+        }
+
+        
+        left->key_count = mid;
+        return right; 
+    };
+
+    // 2) Descend iteratively, recording the path of internal nodes & chosen child index
+    Node* path_nodes[128];
+    int   path_pos[128];
+    int depth = 0;
+
+    Node* cur = root;
+    while (!cur->is_leaf) {
+        // Choose child position
+        int pos = 0;
+        while (pos < cur->key_count && key > cur->keys[pos]) pos++;
+        // Record path
+        path_nodes[depth] = cur;
+        path_pos[depth] = pos;
+        depth++;
+
+        if (!cur->children[pos]) {
+            cur->children[pos] = new Node(true);
+        }
+        cur = cur->children[pos];
+    }
+
+    // cur is a LEAF
+    if (cur->key_count < MAX_KEYS) {
+        return insertIntoLeaf(cur, key, block_id, record_id);
+    }
+
+    // Leaf is FULL: split leaf first
+    auto split_res = splitLeaf(cur);
+    KeyType promoted_key = split_res.first;
+    Node* new_right = split_res.second;
+
+    if (!new_right) return false;
+
+    // Insert the new key/value into the correct leaf (left or right)
+    if (key < promoted_key) {
+        insertIntoLeaf(cur, key, block_id, record_id);
+    } else {
+        insertIntoLeaf(new_right, key, block_id, record_id);
+    }
+
+    // Insert promoted_key and new_right into each parent on the way up.
+    for (int i = depth - 1; i >= 0; --i) {
+        Node* parent = path_nodes[i];
+        int insert_pos = path_pos[i];
+
+        // Shift parent’s keys/children to make room at insert_pos
+        for (int k = parent->key_count; k > insert_pos; --k) {
+            parent->keys[k] = parent->keys[k - 1];
+            parent->children[k + 1] = parent->children[k];
+        }
+        parent->keys[insert_pos] = promoted_key;
+        parent->children[insert_pos + 1] = new_right;
+        parent->key_count++;
+
+        if (parent->key_count < MAX_KEYS) {
             return true;
         }
-    } else {
-        // Internal node - find appropriate child
-        int pos = 0;
-        while (pos < root->key_count && pos < MAX_KEYS && key > root->keys[pos]) {
-            pos++;
-        }
-        
-        // Ensure we don't go out of bounds
-        if (pos > MAX_KEYS) pos = MAX_KEYS;
-        
-        // Recursively insert into child
-        if (root->children[pos]) {
-            return insert(root->children[pos], key, block_id, record_id);
-        } else {
-            // Create new child if it doesn't exist
-            root->children[pos] = new BPlusTreeNode<KeyType>(true);
-            return insert(root->children[pos], key, block_id, record_id);
-        }
+
+        KeyType parent_promoted;
+        Node* parent_right = splitInternalHere(parent, parent_promoted);
+
+        promoted_key = parent_promoted;
+        new_right = parent_right;
     }
+
+    Node* new_root = new Node(false);
+    new_root->keys[0] = promoted_key;
+    new_root->children[0] = root;
+    new_root->children[1] = new_right;
+    new_root->key_count = 1;
+    root = new_root;
+    return true;
 }
 
 // Insert into a leaf node (assumes node has space)
@@ -382,6 +436,39 @@ std::vector<std::pair<int, int>> IndexManager::searchByFTPercentage(float min_pc
     return rangeSearch(ft_pct_index, min_pct, max_pct);
 }
 
+
+template<typename KeyType>
+static void printRootKeysLine(const std::string& index_name, BPlusTreeNode<KeyType>* root) {
+    std::cout << "  - Root keys (" 
+              << (root ? root->key_count : 0) 
+              << "): ";
+    if (!root || root->key_count == 0) {
+        std::cout << "(empty)\n";
+        return;
+    }
+
+    // Save/restore format state
+    std::ios::fmtflags f = std::cout.flags();
+    std::streamsize p = std::cout.precision();
+
+    // If floating-point keys (FT% / FG%), pretty-print to 3 d.p.
+    if (std::is_floating_point<KeyType>::value) {
+        std::cout.setf(std::ios::fixed);
+        std::cout.precision(3);
+    }
+
+    for (int i = 0; i < root->key_count; ++i) {
+        if (i) std::cout << " | ";
+        std::cout << root->keys[i];
+    }
+    std::cout << "\n";
+
+    // Restore format state
+    std::cout.flags(f);
+    std::cout.precision(p);
+}
+
+
 void IndexManager::displayIndexStatistics() const
 {
     std::cout << "\n=== B+ Tree Index Statistics (Max 20 keys per node) ===" << std::endl;
@@ -424,6 +511,8 @@ void IndexManager::displaySingleIndexStats(const std::string& index_name, BPlusT
     if (leaf_nodes > 0) {
         std::cout << "  - Avg keys per leaf: " << (total_keys / leaf_nodes) << std::endl;
     }
+
+    printRootKeysLine(index_name, root);
 }
 
 // Template instantiations
