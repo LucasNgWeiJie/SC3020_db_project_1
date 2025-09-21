@@ -174,6 +174,24 @@ std::vector<GameRecord> DatabaseFile::searchByFGPercentage(float min_pct, float 
     return results;
 }
 
+// search methods using FT percentage range
+std::vector<GameRecord> DatabaseFile::searchByFTPercentage(float min_pct, float max_pct)
+{
+    std::vector<GameRecord> results;
+    if (!index_manager) return results;
+    
+    auto locations = index_manager->searchByFTPercentage(min_pct, max_pct);
+    
+    for (const auto& loc : locations) {
+        if (static_cast<size_t>(loc.first) < blocks.size()) {  // Cast int to size_t
+            GameRecord record = blocks[loc.first].getRecord(loc.second);
+            results.push_back(record);
+        }
+    }
+    
+    return results;
+}
+
 // Display index statistics
 void DatabaseFile::displayIndexStatistics() const
 {
