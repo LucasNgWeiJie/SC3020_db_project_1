@@ -134,7 +134,7 @@ bool IndexManager::insert(BPlusTreeNode<KeyType>*& root, KeyType key, int block_
         return right; 
     };
 
-    // 2) Descend iteratively, recording the path of internal nodes & chosen child index
+    // Descend iteratively, recording the path of internal nodes & chosen child index
     Node* path_nodes[128];
     int   path_pos[128];
     int depth = 0;
