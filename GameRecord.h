@@ -100,7 +100,8 @@ private:
     BPlusTreeNode<int>* points_index;       // Index on pts_home  
     BPlusTreeNode<float>* fg_pct_index;     // Index on fg_pct_home
     BPlusTreeNode<std::string>* date_index; // Index on game_date
-    
+    BPlusTreeNode<float>* ft_pct_index;     // Index on ft_pct_home
+
 public:
     IndexManager();
     ~IndexManager();
@@ -113,6 +114,7 @@ public:
     std::vector<std::pair<int, int>> searchByPointsRange(int min_pts, int max_pts);
     std::vector<std::pair<int, int>> searchByFGPercentage(float min_pct, float max_pct);
     std::vector<std::pair<int, int>> searchByDate(const std::string& date);
+    std::vector<std::pair<int, int>> searchByFTPercentage(float min_pct, float max_pct);
     
     // Insert/Update operations
     bool insertIndex(const GameRecord& record, int block_id, int record_id);
@@ -201,6 +203,7 @@ public:
     std::vector<GameRecord>searchByTeamId(int team_id);
     std::vector<GameRecord>searchByPointsRange(int min_pts, int max_pts);
     std::vector<GameRecord>searchByFGPercentage(float min_pct, float max_pct);
+    std::vector<GameRecord>searchByFTPercentage(float min_pct, float max_pct);
 
     // Utility method to access blocks
     const Block& getBlock(size_t index) const { return blocks[index]; }
