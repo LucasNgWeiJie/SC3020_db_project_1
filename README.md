@@ -67,10 +67,10 @@ These indexes were implemented to demonstrate that our B+ tree component works a
 
 ```powershell
 # Compile all files together (Windows)
-g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nb_adb.exe
+g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nba_db.exe
 
 # Compile all files together (MacOs)
-g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nb_adb
+g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o nba_db
 ```
 
 ### Running the Program
@@ -80,7 +80,7 @@ g++ -std=c++14 -Wall -Wextra -g -O2 main.cpp GameRecord.cpp IndexManager.cpp -o 
 .\nba_db.exe
 
 # Run the compiled executable (MacOs)
-./nba_db.exe
+./nba_db
 ```
 
 
