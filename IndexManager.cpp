@@ -38,7 +38,7 @@ BPlusTreeNode<KeyType>::~BPlusTreeNode()
 // IndexManager Implementation
 IndexManager::IndexManager() 
     : team_id_index(nullptr), points_index(nullptr), 
-      fg_pct_index(nullptr), date_index(nullptr)
+      fg_pct_index(nullptr), date_index(nullptr), ft_pct_index(nullptr)
 {
 }
 
@@ -48,6 +48,7 @@ IndexManager::~IndexManager()
     delete points_index;
     delete fg_pct_index;
     delete date_index;
+    delete ft_pct_index;
 }
 
 bool IndexManager::buildIndexes(const DatabaseFile& db)
@@ -59,6 +60,7 @@ bool IndexManager::buildIndexes(const DatabaseFile& db)
     points_index = new BPlusTreeNode<int>(true);
     fg_pct_index = new BPlusTreeNode<float>(true);
     date_index = new BPlusTreeNode<std::string>(true);
+    ft_pct_index = new BPlusTreeNode<float>(true);
     
     // Insert all records into indexes
     for (size_t block_idx = 0; block_idx < db.getTotalBlocks(); block_idx++) {
@@ -72,6 +74,7 @@ bool IndexManager::buildIndexes(const DatabaseFile& db)
             insert(points_index, record.pts_home, block_idx, record_idx);
             insert(fg_pct_index, record.fg_pct_home, block_idx, record_idx);
             insert(date_index, std::string(record.game_date), block_idx, record_idx);
+            insert(ft_pct_index, record.ft_pct_home, block_idx, record_idx);
         }
     }
     
@@ -374,6 +377,11 @@ std::vector<std::pair<int, int>> IndexManager::searchByDate(const std::string& d
     return search(date_index, date);
 }
 
+std::vector<std::pair<int, int>> IndexManager::searchByFTPercentage(float min_pct, float max_pct)
+{
+    return rangeSearch(ft_pct_index, min_pct, max_pct);
+}
+
 void IndexManager::displayIndexStatistics() const
 {
     std::cout << "\n=== B+ Tree Index Statistics (Max 20 keys per node) ===" << std::endl;
@@ -382,8 +390,9 @@ void IndexManager::displayIndexStatistics() const
     displaySingleIndexStats("Points", points_index);
     displaySingleIndexStats("FG Percentage", fg_pct_index);
     displaySingleIndexStats("Date", date_index);
+    displaySingleIndexStats("FT Percentage", ft_pct_index);
     
-    int total_nodes = countNodes(team_id_index) + countNodes(points_index) + countNodes(fg_pct_index) + countNodes(date_index);
+    int total_nodes = countNodes(team_id_index) + countNodes(points_index) + countNodes(fg_pct_index) + countNodes(date_index) + countNodes(ft_pct_index);
     
     std::cout << "\nOverall Index Statistics:" << std::endl;
     std::cout << "Total index nodes: " << total_nodes << std::endl;
