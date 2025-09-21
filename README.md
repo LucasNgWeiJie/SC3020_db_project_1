@@ -46,6 +46,7 @@ In addition to the required FT_PCT_home B+ tree, we also built indexes for:
 - FG_PCT_home
 - TEAM_ID_home
 - PTS_home
+
 These indexes were implemented to demonstrate that our B+ tree component works across different attribute types.
 
 
