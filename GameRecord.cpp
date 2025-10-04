@@ -41,6 +41,12 @@ namespace Utils
         while (std::getline(ss, token, delimiter)) tokens.push_back(token);
         return tokens;
     }
+
+    // NEW: Check if a string is effectively empty (whitespace only or truly empty)
+    bool isEmptyOrWhitespace(const std::string &str)
+    {
+        return str.empty() || str.find_first_not_of(" \t\r\n") == std::string::npos;
+    }
 }
 
 // =========================
@@ -227,6 +233,7 @@ bool DatabaseFile::loadFromTextFile(const std::string &text_filename)
 
     std::string line;
     bool first_line = true;
+    int skipped_records = 0;  // Track skipped records
 
     // Start first block
     blocks.push_back(Block());
@@ -239,19 +246,37 @@ bool DatabaseFile::loadFromTextFile(const std::string &text_filename)
         GameRecord record;
         if (parseGameLine(line, record))
         {
-            if (!blocks.back().canFitRecord())
+            // NEW: Validate record before adding
+            if (isRecordValid(record))
             {
-                blocks.push_back(Block());
-                total_blocks++;
+                if (!blocks.back().canFitRecord())
+                {
+                    blocks.push_back(Block());
+                    total_blocks++;
+                }
+                if (blocks.back().addRecord(record)) 
+                    total_records++;
+                else 
+                    std::cerr << "Error: Could not add record to block\n";
             }
-            if (blocks.back().addRecord(record)) total_records++;
-            else std::cerr << "Error: Could not add record to block\n";
+            else
+            {
+                skipped_records++;
+            }
+        }
+        else
+        {
+            skipped_records++;
         }
     }
 
     input_file.close();
     std::cout << "Successfully loaded " << total_records << " records into "
               << total_blocks << " blocks." << std::endl;
+    if (skipped_records > 0)
+    {
+        std::cout << "Skipped " << skipped_records << " records with empty or invalid values." << std::endl;
+    }
 
     // Lazy-init tombstones for Task 3 (keeps Task 1/2 behavior unchanged)
     ensureDeletedBitmapInitialized_();
@@ -313,6 +338,13 @@ bool DatabaseFile::readBlocksFromDisk()
 
 bool DatabaseFile::addRecord(const GameRecord &record)
 {
+    // NEW: Validate before adding
+    if (!isRecordValid(record))
+    {
+        std::cerr << "Warning: Attempted to add invalid record with empty values\n";
+        return false;
+    }
+
     if (blocks.empty())
     {
         blocks.push_back(Block());
@@ -371,14 +403,37 @@ bool DatabaseFile::parseGameLine(const std::string &line, GameRecord &record)
     try
     {
         std::string date = Utils::trim(fields[0]);
-        int   team_id    = Utils::safeStringToInt(Utils::trim(fields[1]));
-        int   pts        = Utils::safeStringToInt(Utils::trim(fields[2]));
-        float fg_pct     = Utils::safeStringToFloat(Utils::trim(fields[3]));
-        float ft_pct     = Utils::safeStringToFloat(Utils::trim(fields[4]));
-        float fg3_pct    = Utils::safeStringToFloat(Utils::trim(fields[5]));
-        int   ast        = Utils::safeStringToInt(Utils::trim(fields[6]));
-        int   reb        = Utils::safeStringToInt(Utils::trim(fields[7]));
-        int   wins       = Utils::safeStringToInt(Utils::trim(fields[8]));
+        std::string team_id_str = Utils::trim(fields[1]);
+        std::string pts_str = Utils::trim(fields[2]);
+        std::string fg_pct_str = Utils::trim(fields[3]);
+        std::string ft_pct_str = Utils::trim(fields[4]);
+        std::string fg3_pct_str = Utils::trim(fields[5]);
+        std::string ast_str = Utils::trim(fields[6]);
+        std::string reb_str = Utils::trim(fields[7]);
+        std::string wins_str = Utils::trim(fields[8]);
+
+        // NEW: Check for empty fields before conversion
+        if (Utils::isEmptyOrWhitespace(date) ||
+            Utils::isEmptyOrWhitespace(team_id_str) ||
+            Utils::isEmptyOrWhitespace(pts_str) ||
+            Utils::isEmptyOrWhitespace(fg_pct_str) ||
+            Utils::isEmptyOrWhitespace(ft_pct_str) ||
+            Utils::isEmptyOrWhitespace(fg3_pct_str) ||
+            Utils::isEmptyOrWhitespace(ast_str) ||
+            Utils::isEmptyOrWhitespace(reb_str) ||
+            Utils::isEmptyOrWhitespace(wins_str))
+        {
+            return false;  // Skip this record
+        }
+
+        int   team_id    = Utils::safeStringToInt(team_id_str);
+        int   pts        = Utils::safeStringToInt(pts_str);
+        float fg_pct     = Utils::safeStringToFloat(fg_pct_str);
+        float ft_pct     = Utils::safeStringToFloat(ft_pct_str);
+        float fg3_pct    = Utils::safeStringToFloat(fg3_pct_str);
+        int   ast        = Utils::safeStringToInt(ast_str);
+        int   reb        = Utils::safeStringToInt(reb_str);
+        int   wins       = Utils::safeStringToInt(wins_str);
 
         record = GameRecord(date, team_id, pts, fg_pct, ft_pct, fg3_pct, ast, reb, wins);
         return true;
@@ -390,8 +445,35 @@ bool DatabaseFile::parseGameLine(const std::string &line, GameRecord &record)
     }
 }
 
+// NEW: Validate that a record has no empty/zero critical values
+bool DatabaseFile::isRecordValid(const GameRecord &record) const
+{
+    // Check date is not empty
+    if (std::strlen(record.game_date) == 0)
+        return false;
+
+    // Check team_id is valid (not 0)
+    if (record.team_id_home == 0)
+        return false;
+
+    // You can add more validation rules as needed
+    // For example, check if percentages are in valid range [0, 1]
+    if (record.fg_pct_home < 0.0f || record.fg_pct_home > 1.0f)
+        return false;
+    if (record.ft_pct_home < 0.0f || record.ft_pct_home > 1.0f)
+        return false;
+    if (record.fg3_pct_home < 0.0f || record.fg3_pct_home > 1.0f)
+        return false;
+
+    // Check for negative values that shouldn't be negative
+    if (record.pts_home < 0 || record.ast_home < 0 || record.reb_home < 0)
+        return false;
+
+    return true;
+}
+
 // ============================================
-// Task 3 — Tombstones & Deletion implementations
+// Task 3 – Tombstones & Deletion implementations
 // ============================================
 void DatabaseFile::ensureDeletedBitmapInitialized_() {
     if (deleted_.size() == blocks.size()) return;
