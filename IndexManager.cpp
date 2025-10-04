@@ -247,29 +247,30 @@ std::vector<std::pair<int, int>> IndexManager::search(BPlusTreeNode<KeyType>* ro
 
 // Note: Simple rangeSearch (fine for Task 2 demo).
 template<typename KeyType>
-std::vector<std::pair<int, int>> IndexManager::rangeSearch(BPlusTreeNode<KeyType>* root, KeyType min_key, KeyType max_key)
+std::vector<std::pair<int,int>> IndexManager::rangeSearch(BPlusTreeNode<KeyType>* root,
+                          KeyType min_key, KeyType max_key)
 {
-    std::vector<std::pair<int, int>> results;
+    std::vector<std::pair<int,int>> results;
     if (!root) return results;
 
-    if (root->is_leaf) {
-        for (int i = 0; i < root->key_count; i++) {
-            if (root->keys[i] >= min_key && root->keys[i] <= max_key) {
-                results.emplace_back(root->leaf_data.block_ids[i], root->leaf_data.record_ids[i]);
-            }
-        }
-        if (root->leaf_data.next_leaf) {
-            auto next_results = rangeSearch(root->leaf_data.next_leaf, min_key, max_key);
-            results.insert(results.end(), next_results.begin(), next_results.end());
-        }
-    } else {
-        for (int i = 0; i <= root->key_count; i++) {
-            if (i == 0 || min_key <= root->keys[i-1]) {
-                if (i == root->key_count || max_key >= root->keys[i]) {
-                    auto child_results = rangeSearch(root->children[i], min_key, max_key);
-                    results.insert(results.end(), child_results.begin(), child_results.end());
-                }
-            }
+    // 1) Descend to the first leaf that may contain min_key.
+    BPlusTreeNode<KeyType>* node = root;
+    while (node && !node->is_leaf) {
+        int i = 0;
+        // find first separator > min_key (i.e., lower_bound)
+        while (i < node->key_count && min_key > node->keys[i]) ++i;
+        node = node->children[i]; // 0..key_count
+    }
+    if (!node) return results;
+
+    // 2) Scan forward across leaves, stopping when keys exceed max_key.
+    for (auto leaf = node; leaf != nullptr; leaf = leaf->leaf_data.next_leaf) {
+        for (int i = 0; i < leaf->key_count; ++i) {
+            const KeyType k = leaf->keys[i];
+            if (k < min_key) continue;
+            if (k > max_key) return results; // we can stop entirely
+            results.push_back({ leaf->leaf_data.block_ids[i],
+                            leaf->leaf_data.record_ids[i] });
         }
     }
     return results;
