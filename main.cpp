@@ -46,28 +46,32 @@ int main()
     std::cout << "\nSearching for team ID 1610612744:" << std::endl;
     auto team_results = db.searchByTeamId(1610612744);
     std::cout << "Found " << team_results.size() << " records" << std::endl;
-    for (size_t i = 0; i < std::min<size_t>(5, team_results.size()); i++) {
+    for (size_t i = 0; i < std::min<size_t>(5, team_results.size()); i++)
+    {
         team_results[i].display();
     }
 
     std::cout << "\nSearching for games with 110-120 points:" << std::endl;
     auto points_results = db.searchByPointsRange(110, 120);
     std::cout << "Found " << points_results.size() << " records" << std::endl;
-    for (size_t i = 0; i < std::min<size_t>(5, points_results.size()); i++) {
+    for (size_t i = 0; i < std::min<size_t>(5, points_results.size()); i++)
+    {
         points_results[i].display();
     }
 
     std::cout << "\nSearching for games with FG% between 0.5 and 0.6:" << std::endl;
     auto fg_results = db.searchByFGPercentage(0.5f, 0.6f);
     std::cout << "Found " << fg_results.size() << " records" << std::endl;
-    for (size_t i = 0; i < std::min<size_t>(5, fg_results.size()); i++) {
+    for (size_t i = 0; i < std::min<size_t>(5, fg_results.size()); i++)
+    {
         fg_results[i].display();
     }
 
     std::cout << "\nSearching for games with FT% between 0.9 and 1.0:" << std::endl;
     auto ft_results = db.searchByFTPercentage(0.9f, 1.0f);
     std::cout << "Found " << ft_results.size() << " records" << std::endl;
-    for (size_t i = 0; i < std::min<size_t>(5, ft_results.size()); i++) {
+    for (size_t i = 0; i < std::min<size_t>(5, ft_results.size()); i++)
+    {
         ft_results[i].display();
     }
 
@@ -87,24 +91,24 @@ int main()
         DeletionStats sIdx = db_indexed.deleteByFTAboveIndexed(0.9f);
         const double avgIdx = sIdx.nDeleted ? (sIdx.sumFT / sIdx.nDeleted) : 0.0;
 
-        std::cout << "\n=== Task 3 — Delete FT_PCT_home > 0.9 ===\n";
+        std::cout << "\n=== Task 3 : Delete FT_PCT_home > 0.9 ===\n";
 
         std::cout << "\n> Linear Deletion\n";
         std::cout << "Data blocks accessed: " << sLin.nData << "\n";
-        std::cout << "Records deleted: "     << sLin.nDeleted << "\n";
-        std::cout << "Average FT%: "         << std::fixed << std::setprecision(3) << avgLin << "\n";
-        std::cout << "Time: "                << (sLin.timeUs / 1000.0) << " ms\n";
+        std::cout << "Records deleted: " << sLin.nDeleted << "\n";
+        std::cout << "Average FT%: " << std::fixed << std::setprecision(3) << avgLin << "\n";
+        std::cout << "Time: " << (sLin.timeUs / 1000.0) << " ms\n";
 
         std::cout << "\n> Indexed Deletion\n";
         std::cout << "Index blocks accessed: "
                   << sIdx.nInternal << " internal, "
-                  << sIdx.nLeaf     << " leaf, "
+                  << sIdx.nLeaf << " leaf, "
                   << sIdx.nOverflow << " overflow (total "
                   << (sIdx.nInternal + sIdx.nLeaf + sIdx.nOverflow) << ")\n";
         std::cout << "Data blocks accessed: " << sIdx.nData << "\n";
-        std::cout << "Records deleted: "     << sIdx.nDeleted << "\n";
-        std::cout << "Average FT%: "         << std::fixed << std::setprecision(3) << avgIdx << "\n";
-        std::cout << "Time: "                << (sIdx.timeUs / 1000.0) << " ms\n";
+        std::cout << "Records deleted: " << sIdx.nDeleted << "\n";
+        std::cout << "Average FT%: " << std::fixed << std::setprecision(3) << avgIdx << "\n";
+        std::cout << "Time: " << (sIdx.timeUs / 1000.0) << " ms\n";
 
         // Rebuild FT index on the indexed copy (skip tombstoned) and show structure
         db_indexed.rebuildFTIndexSkippingDeleted();

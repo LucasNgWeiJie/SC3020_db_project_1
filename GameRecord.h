@@ -15,20 +15,20 @@ class DatabaseFile;
 // =============================
 struct GameRecord
 {
-    // Stored exactly as in your existing code
-    char game_date[11]; // "YYYY-MM-DD" (10 + '\0')
-    int team_id_home;
-    int pts_home;
-    float fg_pct_home;
-    float ft_pct_home;
-    float fg3_pct_home;
-    int ast_home;
-    int reb_home;
-    int home_team_wins;
+    // 11 bytes for date + 1 byte for boolean = 12 bytes (divisible by 4)
+    char game_date[11];  // 11 bytes - "YYYY-MM-DD"
+    bool home_team_wins; // 1 byte - true/false instead of int
+    int team_id_home;    // 4 bytes
+    int pts_home;        // 4 bytes
+    float fg_pct_home;   // 4 bytes
+    float ft_pct_home;   // 4 bytes
+    float fg3_pct_home;  // 4 bytes
+    int ast_home;        // 4 bytes
+    int reb_home;        // 4 bytes
 
     GameRecord();
     GameRecord(const std::string &date, int team_id, int pts, float fg_pct,
-               float ft_pct, float fg3_pct, int ast, int reb, int wins);
+               float ft_pct, float fg3_pct, int ast, int reb, bool wins);
 
     void display() const;
     static size_t getRecordSize();
